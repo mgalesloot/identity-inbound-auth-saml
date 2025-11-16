@@ -18,28 +18,6 @@
 
 package org.wso2.carbon.identity.sso.saml.servlet;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.joda.time.DateTime;
-import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
-import org.opensaml.saml.common.SAMLObject;
-import org.opensaml.saml.common.xml.SAMLConstants;
-import org.opensaml.saml.saml2.core.ArtifactResolve;
-import org.opensaml.saml.saml2.core.ArtifactResponse;
-import org.opensaml.soap.common.SOAPObjectBuilder;
-import org.opensaml.soap.soap11.Body;
-import org.opensaml.soap.soap11.Envelope;
-import org.opensaml.core.xml.XMLObjectBuilderFactory;
-import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
-import org.wso2.carbon.identity.base.IdentityException;
-import org.wso2.carbon.identity.core.util.IdentityUtil;
-import org.wso2.carbon.identity.sso.saml.SAMLSSOArtifactResolver;
-import org.wso2.carbon.identity.sso.saml.SAMLSSOConstants;
-import org.wso2.carbon.identity.sso.saml.exception.ArtifactBindingException;
-import org.wso2.carbon.identity.sso.saml.exception.IdentitySAML2SSOException;
-import org.wso2.carbon.identity.sso.saml.util.SAMLSSOUtil;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -49,6 +27,7 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -60,12 +39,34 @@ import javax.xml.soap.SOAPBodyElement;
 import javax.xml.soap.SOAPException;
 import javax.xml.soap.SOAPMessage;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.joda.time.DateTime;
+import org.opensaml.core.xml.XMLObjectBuilderFactory;
+import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
+import org.opensaml.saml.common.SAMLObject;
+import org.opensaml.saml.common.xml.SAMLConstants;
+import org.opensaml.saml.saml2.core.ArtifactResolve;
+import org.opensaml.saml.saml2.core.ArtifactResponse;
+import org.opensaml.soap.common.SOAPObjectBuilder;
+import org.opensaml.soap.soap11.Body;
+import org.opensaml.soap.soap11.Envelope;
+import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
+import org.wso2.carbon.identity.base.IdentityException;
+import org.wso2.carbon.identity.core.util.IdentityUtil;
+import org.wso2.carbon.identity.sso.saml.SAMLSSOArtifactResolver;
+import org.wso2.carbon.identity.sso.saml.SAMLSSOConstants;
+import org.wso2.carbon.identity.sso.saml.exception.ArtifactBindingException;
+import org.wso2.carbon.identity.sso.saml.exception.IdentitySAML2SSOException;
+import org.wso2.carbon.identity.sso.saml.util.SAMLSSOUtil;
+
 /**
- * This is the SAML2 artifact resolve end point for authentication process in an SSO scenario.
+ * This is the SAML2 artifact resolve end point for authentication process in an
+ * SSO scenario.
  * This servlet is registered with the URL pattern /samlartresolve.
  */
 public class SAMLArtifactResolveServlet extends HttpServlet {
@@ -86,8 +87,10 @@ public class SAMLArtifactResolveServlet extends HttpServlet {
     }
 
     /**
-     * All requests are handled by this handleRequest method. Request should come with a soap envelop that
-     * wraps an ArtifactResolve object. First we try to extract resolve object and if successful, call
+     * All requests are handled by this handleRequest method. Request should come
+     * with a soap envelop that
+     * wraps an ArtifactResolve object. First we try to extract resolve object and
+     * if successful, call
      * handle artifact method.
      *
      * @param req  HttpServletRequest object received.
@@ -159,16 +162,15 @@ public class SAMLArtifactResolveServlet extends HttpServlet {
     private void handleArtifact(HttpServletRequest req, HttpServletResponse resp, ArtifactResolve artifactResolve)
             throws IOException, ServletException {
 
+        log.info(artifactResolve.getArtifact().getArtifact() + " : Artifact Resolve request received");
         String id = URLDecoder.decode(artifactResolve.getID(), StandardCharsets.UTF_8.name());
         DateTime issueInstant = artifactResolve.getIssueInstant();
-        String samlArt = URLDecoder.decode(artifactResolve.getArtifact().getArtifact(),
-                StandardCharsets.UTF_8.name());
+        String samlArt = artifactResolve.getArtifact().getArtifact();
         String issuer = artifactResolve.getIssuer().getValue();
         artifactResolve.getArtifact().setArtifact(samlArt);
 
-        if (log.isDebugEnabled()) {
-            log.debug("Resolving SAML2 artifact: " + samlArt);
-        }
+        log.debug("MG: Resolving SAML2 artifact: " + samlArt);
+
         try {
 
             ArtifactResponse artifactResponse = new SAMLSSOArtifactResolver().resolveArtifact(artifactResolve);
@@ -233,7 +235,7 @@ public class SAMLArtifactResolveServlet extends HttpServlet {
      * @throws IOException
      */
     private void sendNotification(String status, String message, HttpServletRequest req,
-                                  HttpServletResponse resp) throws ServletException, IOException {
+            HttpServletResponse resp) throws ServletException, IOException {
 
         String redirectURL = SAMLSSOUtil.getNotificationEndpoint();
 
